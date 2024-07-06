@@ -18,16 +18,21 @@ def ai_suggestion(occasion, uploaded_images):
             prompt += f"\n![Uploaded Image {idx+1}]({image})"
             prompt += f"\nComment: Describe the outfit in the image and whether it's suitable for the occasion."
     
-    fashion_response = client.chat.completions.create(
-        model="gpt-4o",
-        messages=[
-            {"role": "system", "content": "You are a fashion assistant."},
-            {"role": "user", "content": prompt}
-        ],
-        max_tokens=400,  # Adjust max_tokens as needed
-    )
-    response = fashion_response.choices[0].message.content
-    return response
+    try:
+        fashion_response = client.chat.completions.create(
+            model="gpt-4o",
+            messages=[
+                {"role": "system", "content": "You are a fashion assistant."},
+                {"role": "user", "content": prompt}
+            ],
+            max_tokens=400,  # Adjust max_tokens as needed
+        )
+        response = fashion_response.choices[0].message.content
+        return response
+    except openai.BadRequestError as e:
+        st.error(f"OpenAI API request failed: {e}")
+        st.error(f"Request payload: {prompt}")
+        raise  # Re-raise the error to halt execution and get more details in logs
 
 def encode_image(uploaded_file):
     # Read the bytes data from BytesIO object
