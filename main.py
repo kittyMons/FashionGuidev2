@@ -8,7 +8,7 @@ client = openai.OpenAI(api_key=st.secrets['OPENAI_API_KEY'])
 st.title("What's your outfit today?")
 
 def ai_suggestion(items, occasion):
-    prompt = """you are outfit suggester. Give opinions about the outfit that were uploaded and suggest some improvements. Must comment about the outfit that uploaded either it suitable for the occasion or not."""
+    prompt = f"You are a fashion assistant. Based on the following items and the occasion ({occasion}), suggest an outfit and provide feedback on the uploaded outfits:"
     fashion_response = client.chat.completions.create(
         model="gpt-4o",
         messages=[
