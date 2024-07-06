@@ -8,7 +8,7 @@ client = OpenAI(api_key = st.secrets['OPENAI_API_KEY'])
 st.title("What's your outfit today?")
 
 def ai_suggestion(images, occasion):
-  response = OpenAI.chat.completions.create(
+  response = client.chat.completions.create(
   model="gpt-4",
   messages = [
       {
