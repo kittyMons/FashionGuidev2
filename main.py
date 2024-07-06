@@ -15,12 +15,11 @@ def ai_suggestion(items, occasion):
             {"role": "system", "content": "You are a fashion assistant."},
             {"role": "user", "content": prompt}
         ],
-        
         max_tokens=200,
     )
     response = fashion_response.choices[0].message.content
     return response
-    
+
 def encode_image(file_path):
     with open(file_path, 'rb') as image_file:
         return base64.b64encode(image_file.read()).decode('utf-8')
@@ -47,16 +46,14 @@ def vision_file(file_path):
     response = requests.post("https://api.openai.com/v1/chat/completions", headers=headers, json=payload)
     st.write(response.json()['choices'][0]['message']['content'])
 
-
-
-
 uploaded_files = st.file_uploader("Upload pictures of clothes or accessories", type=["jpg", "jpeg", "png"], accept_multiple_files=True)
 
+# Display uploaded images in a horizontal row
 if uploaded_files:
-    for uploaded_file in uploaded_files:
+    columns = st.beta_columns(len(uploaded_files))
+    for column, uploaded_file in zip(columns, uploaded_files):
         bytes_data = uploaded_file.read()
-        st.image(bytes_data)
-
+        column.image(bytes_data, use_column_width=True)
 
 occasion = st.text_input("Enter the occasion for which you need an outfit suggestion (e.g., coffee date)")
 
@@ -67,4 +64,3 @@ if st.button("Get Suggestion"):
         st.write(suggestion)
     else:
         st.write("Please upload images and enter an occasion.")
-
