@@ -8,8 +8,8 @@ client = OpenAI(api_key = st.secrets['OPENAI_API_KEY'])
 st.title("What's your outfit today?")
 
 def ai_suggestion(images, occasion):
-  response = client.chat.completions.create(
-  model="gpt-4",
+  fashion_response = client.chat.completions.create(
+  model="gpt-4o",
   messages = [
       {
         "role": 
@@ -28,15 +28,14 @@ def ai_suggestion(images, occasion):
   ],
   max_tokens=200,
   )
-  return response.choices[0].message["content"]
+  response = fashion_response.choices[0].message.content
+  return response
 
 
 uploaded_files = st.file_uploader("Upload pictures of clothes or accessories", type=["jpg", "jpeg", "png"], accept_multiple_files=True)
 for uploaded_file in uploaded_files:
     bytes_data = uploaded_file.read()
-    st.write("filename:", uploaded_file.name)
     
-
 
 occasion = st.text_input("Enter the occasion for which you need an outfit suggestion (e.g., coffee date)")
 
