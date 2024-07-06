@@ -1,17 +1,22 @@
 import streamlit as st
 import requests
-from openai import OpenAI
+import openai
 from PIL import Image
 import io
+from transformers import pipeline
 
-client = OpenAI(api_key=st.secrets['OPENAI_API_KEY'])
+# Initialize the image recognition pipeline from Hugging Face
+image_recognition = pipeline("image-classification")
+
+# Set OpenAI API key
+openai.api_key = st.secrets['OPENAI_API_KEY']
 
 st.title("What's your outfit today?")
 
 def ai_suggestion(items, occasion):
     prompt = f"Based on the following items: {', '.join(items)} and the occasion: {occasion}, suggest an outfit."
     
-    fashion_response = client.ChatCompletion.create(
+    fashion_response = openai.ChatCompletion.create(
         model="gpt-4",
         messages=[
             {"role": "system", "content": "You are a fashion assistant."},
