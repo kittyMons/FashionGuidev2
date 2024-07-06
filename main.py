@@ -25,7 +25,7 @@ def ai_suggestion(occasion, uploaded_images):
                 {"role": "system", "content": "You are a fashion assistant."},
                 {"role": "user", "content": prompt}
             ],
-            max_tokens=400,  # Adjust max_tokens as needed
+            max_tokens=50,  # Adjust max_tokens as needed
         )
         response = fashion_response.choices[0].message.content
         return response
