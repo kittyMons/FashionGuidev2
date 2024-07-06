@@ -50,7 +50,7 @@ uploaded_files = st.file_uploader("Upload pictures of clothes or accessories", t
 
 # Display uploaded images in a horizontal row
 if uploaded_files:
-    columns = st.beta_columns(len(uploaded_files))
+    columns = st.columns(len(uploaded_files))
     for column, uploaded_file in zip(columns, uploaded_files):
         bytes_data = uploaded_file.read()
         column.image(bytes_data, use_column_width=True)
