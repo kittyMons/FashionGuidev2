@@ -48,4 +48,4 @@ if st.button("Get Suggestion"):
 
         st.write(suggestion)
     else:
-      st.write(Please upload image)
+      st.write("Please upload image")
