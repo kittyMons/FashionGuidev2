@@ -16,8 +16,8 @@ st.title("What's your outfit today?")
 def ai_suggestion(items, occasion):
     prompt = f"Based on the following items: {', '.join(items)} and the occasion: {occasion}, suggest an outfit."
     
-    fashion_response = openai.ChatCompletion.create(
-        model="gpt-4",
+    fashion_response = openai.chat.completions.create(
+        model="gpt-4o",
         messages=[
             {"role": "system", "content": "You are a fashion assistant."},
             {"role": "user", "content": prompt}
