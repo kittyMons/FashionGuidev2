@@ -2,61 +2,67 @@ import streamlit as st
 import openai
 import base64
 import requests
+import google.generativeai as genai
 
+genai.configure(api_key=st.secrets['GOOGLE_API_KEY'])
 client = openai.OpenAI(api_key=st.secrets['OPENAI_API_KEY'])
 
 st.title("What's your outfit today?")
 
-def ai_suggestion(occasion, uploaded_images):
-    prompt = f"You are a fashion assistant. Although I can't see any uploaded outfits, I can certainly help you suggest an outfit for a {occasion} based on an inventory list. Let’s imagine a basic wardrobe and I’ll put together an outfit for you."
-    
-    # Append comments about each uploaded image
-    if uploaded_images:
-        prompt += "\n\n**Uploaded Outfits:**"
-        for idx, image in enumerate(uploaded_images):
-            prompt += f"\n\n**Uploaded Image {idx+1}:**"
-            prompt += f"\n![Uploaded Image {idx+1}]({image})"
-            prompt += f"\nComment: Describe the outfit in the image and whether it's suitable for the occasion."
-    
-    try:
-        fashion_response = client.chat.completions.create(
-            model="gpt-4o",
-            messages=[
-                {"role": "system", "content": "You are a fashion assistant."},
-                {"role": "user", "content": prompt}
-            ],
-            max_tokens=50,  # Adjust max_tokens as needed
-        )
-        response = fashion_response.choices[0].message.content
-        return response
-    except openai.BadRequestError as e:
-        st.error(f"OpenAI API request failed: {e}")
-        st.error(f"Request payload: {prompt}")
-        raise  # Re-raise the error to halt execution and get more details in logs
+def ai_suggestion(items, occasion):
+    prompt = f"You are a fashion assistant. Based on the following items and the occasion ({occasion}), suggest an outfit and provide feedback on the uploaded outfits:"
+    fashion_response = client.chat.completions.create(
+        model="gpt-4o",
+        messages=[
+            {"role": "system", "content": "You are a fashion assistant."},
+            {"role": "user", "content": prompt}
+        ],
+        max_tokens=200,
+    )
+    response = fashion_response.choices[0].message.content
+    return response
 
-def encode_image(uploaded_file):
-    # Read the bytes data from BytesIO object
-    bytes_data = uploaded_file.read()
-    # Encode bytes data to base64
-    encoded_image = base64.b64encode(bytes_data).decode('utf-8')
-    return f"data:image/png;base64,{encoded_image}"
+def encode_image(file_path):
+    with open(file_path, 'rb') as image_file:
+        return base64.b64encode(image_file.read()).decode('utf-8')
+
+def vision_file(file_path):
+    base64_image = encode_image(file_path)
+
+    headers = {
+        "Content-Type": "application/json",
+        "Authorization": f"Bearer {st.secrets['OPENAI_API_KEY']}"
+    }
+
+    payload = {
+        "model": "gpt-4",
+        "messages": [
+            {"role": "user", "content": [
+                {"type": "text", "text": "what is in this image?"},
+                {"type": "image_url", "image_url": {"url": f"data:image/png;base64,{base64_image}"}}
+            ]}
+        ],
+        "max_tokens": 20
+    }
+
+    response = requests.post("https://api.openai.com/v1/chat/completions", headers=headers, json=payload)
+    st.write(response.json()['choices'][0]['message']['content'])
 
 uploaded_files = st.file_uploader("Upload pictures of clothes or accessories", type=["jpg", "jpeg", "png"], accept_multiple_files=True)
 
 # Display uploaded images in a horizontal row
-uploaded_images = []
 if uploaded_files:
     columns = st.columns(len(uploaded_files))
     for column, uploaded_file in zip(columns, uploaded_files):
-        column.image(uploaded_file, use_column_width=True)
-        # Encode and store uploaded image
-        uploaded_images.append(encode_image(uploaded_file))
+        bytes_data = uploaded_file.read()
+        column.image(bytes_data, use_column_width=True)
 
-occasion = st.text_input("Enter the occasion for which you need an outfit suggestion (e.g., restaurant date)")
+occasion = st.text_input("Enter the occasion for which you need an outfit suggestion (e.g., coffee date)")
 
 if st.button("Get Suggestion"):
-    if occasion:
-        suggestion = ai_suggestion(occasion, uploaded_images)
-        st.markdown(suggestion)  # Display suggestion formatted with markdown
+    if uploaded_files and occasion:
+        image_urls = []
+        suggestion = ai_suggestion(image_urls, occasion)
+        st.write(suggestion)
     else:
-        st.write("Please enter an occasion.")
+        st.write("Please upload images and enter an occasion.")
