@@ -9,58 +9,37 @@ st.title("What's your outfit today?")
 
 def ai_suggestion(items, occasion):
     prompt = f"You are a fashion assistant. Based on the following items and the occasion ({occasion}), suggest an outfit and provide feedback on the uploaded outfits:"
-    fashion_response = client.chat.completions.create(
-        model="gpt-4o",
-        messages=[
-            {"role": "system", "content": "You are a fashion assistant."},
-            {"role": "user", "content": prompt}
-        ],
-        max_tokens=200,
+
+    # Call Gemini API for outfit suggestion
+    gemini_response = genai.image2text(
+        input=f"Based on the following items: {', '.join(items)} and the occasion: {occasion}, suggest an outfit.",
+        model="gemini",
+        max_length=200
     )
-    response = fashion_response.choices[0].message.content
+
+    response = gemini_response['text']
     return response
 
-def encode_image(file_path):
-    with open(file_path, 'rb') as image_file:
-        return base64.b64encode(image_file.read()).decode('utf-8')
-
-def vision_file(file_path):
-    base64_image = encode_image(file_path)
-
-    headers = {
-        "Content-Type": "application/json",
-        "Authorization": f"Bearer {st.secrets['OPENAI_API_KEY']}"
-    }
-
-    payload = {
-        "model": "gpt-4",
-        "messages": [
-            {"role": "user", "content": [
-                {"type": "text", "text": "what is in this image?"},
-                {"type": "image_url", "image_url": {"url": f"data:image/png;base64,{base64_image}"}}
-            ]}
-        ],
-        "max_tokens": 20
-    }
-
-    response = requests.post("https://api.openai.com/v1/chat/completions", headers=headers, json=payload)
-    st.write(response.json()['choices'][0]['message']['content'])
+def encode_image(file):
+    bytes_data = file.read()
+    return base64.b64encode(bytes_data).decode('utf-8')
 
 uploaded_files = st.file_uploader("Upload pictures of clothes or accessories", type=["jpg", "jpeg", "png"], accept_multiple_files=True)
 
 # Display uploaded images in a horizontal row
+uploaded_images = []
 if uploaded_files:
     columns = st.columns(len(uploaded_files))
     for column, uploaded_file in zip(columns, uploaded_files):
         bytes_data = uploaded_file.read()
         column.image(bytes_data, use_column_width=True)
+        uploaded_images.append(f"data:image/png;base64,{encode_image(uploaded_file)}")
 
 occasion = st.text_input("Enter the occasion for which you need an outfit suggestion (e.g., coffee date)")
 
 if st.button("Get Suggestion"):
-    if uploaded_files and occasion:
-        image_urls = []
-        suggestion = ai_suggestion(image_urls, occasion)
+    if uploaded_images and occasion:
+        suggestion = ai_suggestion(uploaded_images, occasion)
         st.write(suggestion)
     else:
         st.write("Please upload images and enter an occasion.")
