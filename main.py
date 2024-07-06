@@ -2,9 +2,7 @@ import streamlit as st
 import openai
 import base64
 import requests
-import google.generativeai as genai
 
-genai.configure(api_key=st.secrets['GOOGLE_API_KEY'])
 client = openai.OpenAI(api_key=st.secrets['OPENAI_API_KEY'])
 
 st.title("What's your outfit today?")
